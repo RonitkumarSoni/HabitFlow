@@ -1,87 +1,87 @@
-# HabitFlow — Production-Ready Habit Tracker 📱⚡
+# HabitFlow 📱⚡
 
-**HabitFlow** is a modern, production-ready full-stack Habit Tracking application featuring a **React Native (Expo)** mobile frontend with an **Express + MongoDB Atlas** backend.
-
-Designed with an aesthetic inspired by warm paper/editorial stationery, smooth micro-interactions, optimistic updates, and persistent streak tracking.
+A full-stack, production-grade Habit Tracker mobile application built with **React Native (Expo)**, **Node.js (Express)**, and **MongoDB Atlas**.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🌟 Features
+
+### Mobile Client (React Native / Expo)
+- **Modern Stationery Design**: Warm paper aesthetic with seamless Light and Dark mode support.
+- **Interactive Habit Dashboard**:
+  - Daily progress ring and bar calculating today's completion percentage.
+  - Motivational status messaging based on real-time completion.
+  - Interactive habit cards featuring icon pickers, color accents, and streak indicators.
+- **Optimistic Check-In Toggle**: Real-time feedback with animated checkmarks via `react-native-reanimated` and background sync via TanStack Query.
+- **Detailed Habit Analytics**:
+  - Current streak and longest streak records.
+  - 30-day completion rate progress bar.
+  - 90-day activity heatmap grid.
+- **Weekly Trends**: 7-day completion bar chart visualizing habit consistency over time.
+- **Local Smart Reminders**: Daily scheduled device notifications powered by `expo-notifications`.
+- **Session Persistence**: Secure token management with `expo-secure-store` and automatic 401 interception.
+
+### Backend API (Express / MongoDB Atlas)
+- **JWT Authentication**: Token-based authentication with 30-day expiry and bcrypt password encryption.
+- **Timezone-Resilient Streak Engine**: Pure functional streak logic accounting for late check-ins and timezone differences (default `Asia/Kolkata`).
+- **Resource Ownership & Security**: Strict user-level data isolation, Helmet headers, and CORS enabled.
+- **Cascade Deletions**: Deleting a habit automatically cleans up all associated check-in documents.
+- **Health Checks & Deployment Ready**: `/health` and `/api/health` monitoring endpoints configured for zero-downtime hosting.
+
+---
+
+## 🛠️ Tech Stack
+
+| Domain | Technologies |
+| :--- | :--- |
+| **Mobile Frontend** | React Native, Expo SDK 52, Expo Router v4, TypeScript |
+| **State & Networking** | TanStack React Query v5, Axios |
+| **Storage & Security** | Expo SecureStore, JWT |
+| **UI & Graphics** | React Native SVG, React Native Reanimated, Expo Vector Icons |
+| **Notifications** | Expo Notifications |
+| **Backend API** | Node.js, Express.js |
+| **Database** | MongoDB Atlas, Mongoose ODM |
+| **Security & Utilities**| Helmet, CORS, Express Validator, Morgan, Bcryptjs |
+| **Testing** | Node.js Native Test Runner (`node:test`, `node:assert`), Supertest |
+
+---
+
+## 📁 Repository Structure
 
 ```
-├── app/                              # Expo Router file-based navigation
-│   ├── (auth)/                       # Authentication route group
-│   │   ├── _layout.tsx               # Auth layout (stack)
-│   │   ├── login.tsx                 # Login screen (validation, loading states)
-│   │   └── register.tsx              # Registration screen (auto-login)
-│   ├── (tabs)/                       # Main bottom tab navigator
-│   │   ├── _layout.tsx               # Tab bar configuration & custom icons
-│   │   ├── index.tsx                 # Today (Home): Progress ring, habit list, check toggle
-│   │   ├── stats.tsx                 # Stats: Overview cards, 7-day weekly bar chart
-│   │   └── profile.tsx               # Profile: User info, dark mode switch, logout
-│   ├── habit/
-│   │   ├── new.tsx                   # Add Habit modal (color/icon picker, reminder)
-│   │   ├── [id].tsx                  # Habit Detail (streaks, 30-day rate, 90-day heatmap)
-│   │   └── edit/[id].tsx             # Edit Habit modal (update, archive, cascade delete)
-│   └── _layout.tsx                   # Root layout (Auth, Theme, QueryClient providers)
-├── src/
-│   ├── api/                          # Axios client & typed API resource modules
-│   │   ├── client.ts                 # Interceptors: Bearer token, x-timezone, 401 auto-logout
-│   │   ├── auth.ts                   # Auth endpoints
-│   │   ├── habits.ts                 # Habit CRUD, toggle check-in, range history
-│   │   └── stats.ts                  # Overview, weekly trends & habit stats
-│   ├── context/
-│   │   ├── AuthContext.tsx           # Authentication state, SecureStore token persistence
-│   │   └── ThemeContext.tsx          # Light (warm linen) & Dark mode theme provider
+├── app/                              # Expo Router file-based routing
+│   ├── (auth)/                       # Authentication screens (Login, Register)
+│   ├── (tabs)/                       # Bottom tabs (Today, Stats, Profile)
+│   ├── habit/                        # Habit flows (New, Detail, Edit)
+│   └── _layout.tsx                   # App providers (Auth, Theme, QueryClient)
+├── src/                              # Client-side core logic
+│   ├── api/                          # Axios client & typed endpoint modules
 │   ├── components/                   # Reusable UI widgets
-│   │   ├── Button.tsx                # Pill button with loading spinner & variants
-│   │   ├── Input.tsx                 # Floating input with inline errors & password eye
-│   │   ├── Card.tsx                  # Rounded paper surface container
-│   │   ├── HabitCard.tsx             # Interactive habit card with spring check toggle
-│   │   ├── ProgressRing.tsx          # SVG circular ring + linear progress bar
-│   │   ├── HeatmapGrid.tsx           # 90-day calendar contribution matrix
-│   │   └── EmptyState.tsx            # Illustrated empty state with CTA
-│   ├── theme/                        # Design system tokens (colors, typography, spacing)
-│   └── utils/
-│       ├── date.ts                   # Date formatting, greeting generator, time parsing
-│       └── notifications.ts          # Local daily notifications scheduler
-├── config/
-│   └── db.js                         # MongoDB Atlas connection & connection events
-├── controllers/                      # Backend Express business logic
-│   ├── authController.js
-│   ├── habitController.js
-│   ├── checkInController.js
-│   └── statsController.js
-├── middleware/                       # Backend middlewares (auth, central errorHandler, validator)
+│   ├── context/                      # AuthContext & ThemeContext
+│   ├── theme/                        # Colors, typography, spacing tokens
+│   └── utils/                        # Date helpers & notification scheduler
+├── config/                           # MongoDB connection configuration
+├── controllers/                      # Express route controllers
+├── middleware/                       # Auth & central error handler
 ├── models/                           # Mongoose schemas (User, Habit, CheckIn)
-├── test/                             # 41 automated backend tests across 9 suites
-├── utils/
-│   └── streak.js                     # Pure streak calculation functions
-├── app.json                          # Expo configuration & notification plugin
-├── eas.json                          # EAS build config (preview APK profile)
-├── package.json                      # Unified dependencies & npm scripts
-└── server.js                         # Express server entry point
+├── routes/                           # API route definitions
+├── test/                             # Automated test suite (41 tests)
+├── utils/                            # Core streak algorithm
+├── app.json                          # Expo project configuration
+├── eas.json                          # Expo Application Services build configuration
+├── postman_collection.json           # Comprehensive Postman collection
+├── server.js                         # API server entry point
+└── package.json                      # Project dependencies & scripts
 ```
 
 ---
 
-## 🎨 Design System
+## ⚙️ Environment Variables
 
-- **Light Mode Background**: `#F5F3EE` (Warm linen paper)
-- **Dark Mode Background**: `#121316` (Deep ink paper)
-- **Signature Emerald**: `#0B7A5E` / Tint `#E3F1EC`
-- **Streak Flame**: `#E4572E` / Tint `#FBE9E3`
-- **Typography**: Clean system typography with high legibility and hierarchy.
-- **Micro-interactions**: Spring-physics animated checkboxes using `react-native-reanimated`.
-
----
-
-## ⚙️ Environment Configuration
-
-Create a `.env` file in the root directory (based on `.env.example`):
+Create a `.env` file in the project root:
 
 ```env
-# Backend Server Configuration
+# Backend Configuration
 PORT=5000
 NODE_ENV=development
 MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/habittracker?retryWrites=true&w=majority
@@ -89,94 +89,111 @@ JWT_SECRET=super_secret_jwt_key_habit_tracker_mobile_app_prod_2026
 JWT_EXPIRE=30d
 DEFAULT_TIMEZONE=Asia/Kolkata
 
-# Expo Mobile Frontend (Publicly accessible backend URL)
+# Mobile Client Configuration
 EXPO_PUBLIC_API_URL=https://habitflow-backend.onrender.com/api
 ```
 
-> **Note**: For local testing between an Android emulator / physical device and a local server, configure `EXPO_PUBLIC_API_URL` to your machine's LAN IP (e.g. `http://192.168.1.5:5000/api`) or your deployed Render URL. Do **not** use `localhost` for physical devices.
-
 ---
 
-## 🚀 Running the Project
+## 🚀 Getting Started
 
-### 1. Start the Express Backend Server
+### 1. Installation
 ```bash
-# Production start
-npm run server
+# Clone the repository
+git clone https://github.com/RonitkumarSoni/HabitFlow.git
+cd HabitFlow
 
-# Or development mode with auto-reload
-npm run server:dev
+# Install dependencies
+npm install
 ```
 
-### 2. Start the Expo React Native App
+### 2. Run the Backend Server
+```bash
+# Start server in development mode
+npm run server:dev
+
+# Start server in production mode
+npm run server
+```
+
+### 3. Run the Mobile App
 ```bash
 # Start Metro bundler
 npx expo start
 ```
-
-Press:
-- **`a`** to open on Android Emulator or connected USB device.
-- **`w`** to open in Web Browser.
-- Scan the terminal QR code with the **Expo Go** app on your phone.
+- Press **`a`** for Android Emulator.
+- Press **`w`** for Web preview.
+- Scan the QR code using the **Expo Go** app on your physical device.
 
 ---
 
-## 📦 Building Android APK (`eas.json`)
+## 📡 API Reference
 
-To generate a standalone installable Android APK without Google Play Console setup:
+All backend endpoints are prefixed with `/api`.
 
-1. Install EAS CLI:
-   ```bash
-   npm install -g eas-cli
-   ```
-2. Log in to your Expo account:
-   ```bash
-   eas login
-   ```
-3. Run the APK preview build:
-   ```bash
-   eas build -p android --profile preview
-   ```
-4. Once completed, EAS will provide a direct download link for your `HabitFlow.apk`!
+### Authentication
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Register new user and receive JWT |
+| `POST` | `/api/auth/login` | Public | Authenticate credentials and receive JWT |
+| `GET` | `/api/auth/me` | Protected | Fetch authenticated user profile |
 
----
+### Habits
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/habits` | Protected | Create a new daily habit |
+| `GET` | `/api/habits` | Protected | List active habits with streak & completion states |
+| `GET` | `/api/habits/:id` | Protected | Retrieve specific habit details |
+| `PUT` | `/api/habits/:id` | Protected | Update habit metadata or reminder time |
+| `DELETE` | `/api/habits/:id` | Protected | Delete habit and cascade remove check-ins |
+| `PATCH` | `/api/habits/:id/archive` | Protected | Toggle archive status |
 
-## 🧠 Key Viva / Interview Concepts Explained
+### Check-Ins
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/habits/:id/toggle` | Protected | Toggle check-in state for a date (`YYYY-MM-DD`) |
+| `GET` | `/api/habits/:id/checkins` | Protected | Retrieve check-in history across date ranges |
 
-### 1. How does the Streak Calculation work?
-- Streak calculation is implemented as **pure functions** in [`utils/streak.js`](file:///c:/Users/ADMIN/OneDrive/Desktop/diwali_assigmnet/utils/streak.js).
-- **`currentStreak`**: Counts consecutive days completed ending today. If today has **not** been completed yet, the count starts from **yesterday**. This guarantees a user's streak isn't prematurely broken during an active day before they have a chance to complete it!
-- **`longestStreak`**: Deduplicates dates, sorts them chronologically in UTC, walks through consecutive differences (`diff == 1`), and maintains the global maximum run.
-- **Timezone Safety**: Dates are strictly stored and queried in `"YYYY-MM-DD"` format. The client sends its local date and timezone header (`x-timezone`), preventing UTC midnight rollover discrepancies.
-
-### 2. How does Optimistic Check-In Toggle work in the Mobile App?
-In [`app/(tabs)/index.tsx`](file:///c:/Users/ADMIN/OneDrive/Desktop/diwali_assigmnet/app/(tabs)/index.tsx), we use TanStack React Query's `useMutation` with `onMutate`:
-1. When the user taps the checkbox, `onMutate` immediately updates the local React Query cache and increments/decrements the streak count and `todayDone` state.
-2. The user sees an instant visual checkmark and spring animation without waiting for network latency.
-3. If the server request succeeds, the cache is refreshed via `onSettled`.
-4. If the server request fails (e.g. network disconnect), `onError` seamlessly rolls back to the previous snapshot.
-
-### 3. How is Authentication Persisted & Protected?
-1. The JWT token returned from `/api/auth/login` or `/api/auth/register` is encrypted on device using `expo-secure-store`.
-2. On app launch, `AuthContext` reads the token and calls `/api/auth/me` to restore the user session.
-3. An Axios request interceptor attaches `Authorization: Bearer <token>` to every request.
-4. An Axios response interceptor monitors for `401 Unauthorized`. If a token expires or becomes invalid, it deletes the token from `SecureStore` and redirects the user to the login screen.
-
-### 4. How do Local Notifications work?
-In [`src/utils/notifications.ts`](file:///c:/Users/ADMIN/OneDrive/Desktop/diwali_assigmnet/src/utils/notifications.ts):
-- When a habit is saved with a `reminderTime` (e.g. `08:00`), `scheduleHabitReminder` schedules a recurring daily notification via `expo-notifications`.
-- When a habit is edited, archived, or deleted, `cancelHabitReminder` removes the scheduled trigger.
+### Analytics
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/stats/overview` | Protected | Overall completion rate, totals, and longest streak |
+| `GET` | `/api/stats/weekly` | Protected | 7-day completion breakdown |
+| `GET` | `/api/habits/:id/stats` | Protected | Habit-specific 30-day rate and 90-day heatmap data |
 
 ---
 
 ## 🧪 Testing
 
-The backend includes a comprehensive 41-test automated suite covering authentication, streak math, habits CRUD, cascade deletes, error handling, and stats:
+The backend includes a test suite covering streak logic, controller behavior, cascade operations, and input validation:
+
 ```bash
+# Execute backend test suite
 npm test
-```
-TypeScript compilation check for the frontend:
-```bash
+
+# Type-check frontend TypeScript
 npx tsc --noEmit
 ```
-Both pass with **0 errors and 0 warnings**.
+
+---
+
+## 📦 Production Builds (Android APK)
+
+The project includes an `eas.json` configuration with an APK preview profile:
+
+```bash
+# Install EAS CLI globally
+npm install -g eas-cli
+
+# Login to Expo
+eas login
+
+# Build standalone Android APK
+eas build -p android --profile preview
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
