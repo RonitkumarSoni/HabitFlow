@@ -1,0 +1,496 @@
+{
+  "info": {
+    "_postman_id": "a93e3d48-601e-45eb-92f7-7201c9ba9512",
+    "name": "Habit Tracker API",
+    "description": "Production-ready REST API collection for Habit Tracker backend (React Native mobile client). Includes full Auth, Habits CRUD, Check-ins, Streak calculation, and Stats endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "habitId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Root Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Health check for Render load balancers and container monitoring."
+          }
+        },
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            },
+            "description": "API status and uptime indicator."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.token) {",
+                  "    pm.collectionVariables.set('authToken', response.data.token);",
+                  "    console.log('Saved authToken:', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alex Mercer\",\n  \"email\": \"alex@example.com\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Registers a new user and automatically stores the JWT token."
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.token) {",
+                  "    pm.collectionVariables.set('authToken', response.data.token);",
+                  "    console.log('Saved authToken:', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex@example.com\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Authenticates user credentials and returns a 30-day JWT token."
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Retrieves the currently authenticated user's profile."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Habits",
+      "item": [
+        {
+          "name": "Create Habit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.habit) {",
+                  "    pm.collectionVariables.set('habitId', response.data.habit._id);",
+                  "    console.log('Saved habitId:', response.data.habit._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Morning Meditation\",\n  \"description\": \"15 minutes of mindfulness breathing\",\n  \"icon\": \"meditation\",\n  \"color\": \"#10B981\",\n  \"frequency\": \"daily\",\n  \"reminderTime\": \"07:30\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habits",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits"]
+            },
+            "description": "Creates a new daily habit for the authenticated user."
+          }
+        },
+        {
+          "name": "Get All Habits (with todayDone & streaks)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habits?includeArchived=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits"],
+              "query": [
+                {
+                  "key": "includeArchived",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "Returns all habits with todayDone (boolean) and currentStreak."
+          }
+        },
+        {
+          "name": "Get Habit By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habits/{{habitId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits", "{{habitId}}"]
+            },
+            "description": "Returns habit details with todayDone, currentStreak, and longestStreak."
+          }
+        },
+        {
+          "name": "Update Habit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Morning Mindfulness Meditation\",\n  \"description\": \"20 minutes daily session\",\n  \"color\": \"#3B82F6\",\n  \"reminderTime\": \"07:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habits/{{habitId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits", "{{habitId}}"]
+            },
+            "description": "Updates habit fields."
+          }
+        },
+        {
+          "name": "Archive / Unarchive Habit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isArchived\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habits/{{habitId}}/archive",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits", "{{habitId}}", "archive"]
+            },
+            "description": "Toggles or sets the archived status of a habit."
+          }
+        },
+        {
+          "name": "Delete Habit (Cascades Check-ins)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habits/{{habitId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits", "{{habitId}}"]
+            },
+            "description": "Permanently deletes habit and cascades deletion to all associated check-ins."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Check-ins",
+      "item": [
+        {
+          "name": "Toggle Check-In (Default Today)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-11-08\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habits/{{habitId}}/toggle",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits", "{{habitId}}", "toggle"]
+            },
+            "description": "Toggles check-in status: creates if absent, deletes if present. Returns updated habit with streak."
+          }
+        },
+        {
+          "name": "Get Habit Check-Ins (Range)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habits/{{habitId}}/checkins?from=2026-10-01&to=2026-11-08",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits", "{{habitId}}", "checkins"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-11-08"
+                }
+              ]
+            },
+            "description": "Fetches check-ins within an optional date range."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "Get Overview Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats", "overview"]
+            },
+            "description": "Returns totalHabits, completedToday, todayPercentage, and overall longestStreak."
+          }
+        },
+        {
+          "name": "Get Weekly Stats (Last 7 Days)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/weekly",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats", "weekly"]
+            },
+            "description": "Returns array of last 7 days with completed and total habit counts."
+          }
+        },
+        {
+          "name": "Get Habit Detailed Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habits/{{habitId}}/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habits", "{{habitId}}", "stats"]
+            },
+            "description": "Returns currentStreak, longestStreak, totalCompletions, 30-day completionRate, and 90-day heatmap."
+          }
+        }
+      ]
+    }
+  ]
+}
+
