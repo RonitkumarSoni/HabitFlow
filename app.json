@@ -45,6 +45,16 @@
         }
       ],
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "e82e2a1d-c806-4c21-9227-40e0a9129908"
+      }
+    }
   }
 }

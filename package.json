@@ -25,6 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-native/metro-config": "^0.88.1",
     "@tanstack/react-query": "^5.66.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
@@ -44,7 +45,9 @@
     "mongoose": "^8.10.0",
     "morgan": "^1.10.0",
     "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-native": "0.88.1",
+    "react-native-gesture-handler": "~3.3.0",
     "react-native-gifted-charts": "^1.4.55",
     "react-native-reanimated": "4.7.1",
     "react-native-safe-area-context": "~5.11.1",
