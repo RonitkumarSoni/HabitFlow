@@ -43,8 +43,8 @@
           "color": "#0B7A5E",
           "sounds": []
         }
-      ]
+      ],
+      "expo-status-bar"
     ]
   }
 }
-
