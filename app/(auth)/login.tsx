@@ -20,7 +20,6 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { Input } from '../../src/components/Input';
 import { Button } from '../../src/components/Button';
-import { GoogleColorIcon } from '../../src/components/GoogleIcon';
 import { BorderRadius, Spacing, Typography } from '../../src/theme';
 
 WebBrowser.maybeCompleteAuthSession();
