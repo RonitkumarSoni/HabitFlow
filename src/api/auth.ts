@@ -27,8 +27,18 @@ export const authApi = {
     return res.data.data;
   },
 
+  async googleLogin(data: { token?: string; email?: string; name?: string; photoUrl?: string }): Promise<AuthResponse['data']> {
+    const res = await apiClient.post<AuthResponse>('/auth/google', data);
+    return res.data.data;
+  },
+
   async getMe(): Promise<User> {
     const res = await apiClient.get<{ success: boolean; data: { user: User } }>('/auth/me');
+    return res.data.data.user;
+  },
+
+  async updateProfile(data: { name: string; email?: string }): Promise<User> {
+    const res = await apiClient.put<{ success: boolean; data: { user: User } }>('/auth/profile', data);
     return res.data.data.user;
   },
 };

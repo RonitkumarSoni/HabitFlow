@@ -22,9 +22,18 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Please provide a password'],
+      required: false, // Optional for Google OAuth users
       minlength: [6, 'Password must be at least 6 characters'],
       select: false // Never return password in queries by default
+    },
+    googleId: {
+      type: String,
+      default: null,
+      sparse: true
+    },
+    picture: {
+      type: String,
+      default: null
     },
     createdAt: {
       type: Date,

@@ -10,6 +10,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: { email: string; password: string }) => Promise<void>;
   register: (data: { name: string; email: string; password: string }) => Promise<void>;
+  loginWithGoogle: (data: { token?: string; email?: string; name?: string; photoUrl?: string }) => Promise<void>;
+  updateUser: (updatedUser: User) => void;
   logout: () => Promise<void>;
 }
 
@@ -19,6 +21,8 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => {},
   register: async () => {},
+  loginWithGoogle: async () => {},
+  updateUser: () => {},
   logout: async () => {},
 });
 
@@ -104,8 +108,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     router.replace('/(tabs)');
   };
 
+  const loginWithGoogle = async (data: { token?: string; email?: string; name?: string; photoUrl?: string }) => {
+    const result = await authApi.googleLogin(data);
+    await SecureStore.setItemAsync(TOKEN_KEY, result.token);
+    setToken(result.token);
+    setUser(result.user);
+    router.replace('/(tabs)');
+  };
+
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, loginWithGoogle, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

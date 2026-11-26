@@ -1,16 +1,33 @@
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-// Configure notification behavior when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Lazy-load notifications to prevent early initialization context errors on Android/Expo Go
+let Notifications: typeof import('expo-notifications') | null = null;
+let isHandlerConfigured = false;
+
+async function getNotificationsModule() {
+  if (Platform.OS === 'web') return null;
+  if (!Notifications) {
+    try {
+      Notifications = await import('expo-notifications');
+      if (!isHandlerConfigured && Notifications?.setNotificationHandler) {
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
+        isHandlerConfigured = true;
+      }
+    } catch (e) {
+      console.warn('Failed to load expo-notifications module:', e);
+      return null;
+    }
+  }
+  return Notifications;
+}
 
 /**
  * Request notification permissions from user
@@ -18,15 +35,23 @@ Notifications.setNotificationHandler({
 export async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
+  try {
+    const notif = await getNotificationsModule();
+    if (!notif) return false;
 
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
+    const { status: existingStatus } = await notif.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await notif.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    return finalStatus === 'granted';
+  } catch (error) {
+    console.warn('Notification permission request error:', error);
+    return false;
   }
-
-  return finalStatus === 'granted';
 }
 
 /**
@@ -42,6 +67,9 @@ export async function scheduleHabitReminder(
   reminderTime: string
 ): Promise<string | null> {
   try {
+    const notif = await getNotificationsModule();
+    if (!notif) return null;
+
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) return null;
 
@@ -52,14 +80,14 @@ export async function scheduleHabitReminder(
     const hour = parseInt(hourStr, 10);
     const minute = parseInt(minuteStr, 10);
 
-    const notificationId = await Notifications.scheduleNotificationAsync({
+    const notificationId = await notif.scheduleNotificationAsync({
       content: {
         title: `Time for ${title}! 🔥`,
         body: 'Keep your streak alive. Tap to check in.',
         data: { habitId },
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        type: notif.SchedulableTriggerInputTypes.DAILY,
         hour,
         minute,
       },
@@ -77,10 +105,13 @@ export async function scheduleHabitReminder(
  */
 export async function cancelHabitReminder(habitId: string): Promise<void> {
   try {
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const notif = await getNotificationsModule();
+    if (!notif) return;
+
+    const scheduled = await notif.getAllScheduledNotificationsAsync();
     for (const item of scheduled) {
       if (item.content.data?.habitId === habitId) {
-        await Notifications.cancelScheduledNotificationAsync(item.identifier);
+        await notif.cancelScheduledNotificationAsync(item.identifier);
       }
     }
   } catch (error) {

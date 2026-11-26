@@ -29,10 +29,31 @@ export default function NewHabitScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('book-outline');
+  const [userSelectedIcon, setUserSelectedIcon] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#0B7A5E');
   const [hasReminder, setHasReminder] = useState(false);
   const [reminderTime, setReminderTime] = useState('08:00'); // HH:mm 24h
   const [titleError, setTitleError] = useState<string | undefined>();
+
+  // Auto-detect best matching icon from habit title
+  const autoDetectIcon = (text: string) => {
+    const lower = text.toLowerCase();
+    if (lower.match(/code|coding|program|dev|script|react|python|java|bug/)) return 'code-slash-outline';
+    if (lower.match(/read|book|study|learn|chapter|pages/)) return 'book-outline';
+    if (lower.match(/gym|workout|exercise|pushup|fitness|train|lift|run/)) return 'fitness-outline';
+    if (lower.match(/water|drink|hydrate|hydration/)) return 'water-outline';
+    if (lower.match(/walk|step|walks|stroll/)) return 'walk-outline';
+    if (lower.match(/cycle|bike|cycling/)) return 'bicycle-outline';
+    if (lower.match(/sleep|nap|bed|rest/)) return 'moon-outline';
+    if (lower.match(/diet|eat|food|meal|nutrition|cook/)) return 'restaurant-outline';
+    if (lower.match(/journal|diary|write|notes/)) return 'journal-outline';
+    if (lower.match(/music|guitar|piano|sing|song/)) return 'musical-notes-outline';
+    if (lower.match(/meditat|yoga|peace|mindful|breathe/)) return 'leaf-outline';
+    if (lower.match(/health|care|skin|heart|self/)) return 'heart-outline';
+    if (lower.match(/wake|early|morning|alarm/)) return 'alarm-outline';
+    if (lower.match(/draw|paint|art|design|brush|sketch/)) return 'brush-outline';
+    return null;
+  };
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -126,6 +147,10 @@ export default function NewHabitScreen() {
             onChangeText={(text) => {
               setTitle(text);
               if (titleError) setTitleError(undefined);
+              if (!userSelectedIcon) {
+                const detected = autoDetectIcon(text);
+                if (detected) setSelectedIcon(detected);
+              }
             }}
             error={titleError}
           />
@@ -171,7 +196,10 @@ export default function NewHabitScreen() {
                 <TouchableOpacity
                   key={item.name}
                   activeOpacity={0.8}
-                  onPress={() => setSelectedIcon(item.name)}
+                  onPress={() => {
+                    setSelectedIcon(item.name);
+                    setUserSelectedIcon(true);
+                  }}
                   style={[
                     styles.iconBox,
                     {

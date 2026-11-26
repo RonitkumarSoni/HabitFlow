@@ -7,26 +7,75 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { Input } from '../../src/components/Input';
 import { Button } from '../../src/components/Button';
+import { GoogleColorIcon } from '../../src/components/GoogleIcon';
 import { BorderRadius, Spacing, Typography } from '../../src/theme';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const { colors } = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const webClientId =
+    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    '393922369289-n755t1ae8qf4evh1c4rvaol9751lr139.apps.googleusercontent.com';
+
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      setErrorMessage('');
+
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: 'habitflow',
+      });
+
+      const discovery = {
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenEndpoint: 'https://oauth2.googleapis.com/token',
+      };
+
+      const authRequest = new AuthSession.AuthRequest({
+        clientId: webClientId,
+        scopes: ['openid', 'profile', 'email'],
+        redirectUri,
+        responseType: AuthSession.ResponseType.Token,
+      });
+
+      const result = await authRequest.promptAsync(discovery);
+
+      if (result.type === 'success' && result.params?.access_token) {
+        await loginWithGoogle({ token: result.params.access_token });
+      } else if (result.type === 'error') {
+        setErrorMessage(result.error?.message || 'Google Sign-In was cancelled or failed.');
+      }
+    } catch (err: any) {
+      console.warn('Google sign-in error:', err);
+      setErrorMessage(err.response?.data?.message || err.message || 'Google sign-in failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const validate = () => {
     const errs: { email?: string; password?: string } = {};
@@ -69,8 +118,12 @@ export default function LoginScreen() {
         >
           {/* Brand header */}
           <View style={styles.brandContainer}>
-            <View style={[styles.logoBadge, { backgroundColor: colors.primaryLight }]}>
-              <Text style={styles.logoEmoji}>🔥</Text>
+            <View style={[styles.logoBadge, { backgroundColor: '#121316' }]}>
+              <Image
+                source={require('../../assets/icon.png')}
+                style={styles.logoImage}
+                resizeMode="cover"
+              />
             </View>
             <Text style={[styles.brandName, { color: colors.text }]}>HabitFlow</Text>
             <Text style={[styles.tagline, { color: colors.textSecondary }]}>
@@ -125,6 +178,30 @@ export default function LoginScreen() {
               loading={loading}
               style={styles.submitBtn}
             />
+
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            </View>
+
+            {/* Google Sign-In Button */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              disabled={googleLoading}
+              onPress={handleGoogleLogin}
+              style={[
+                styles.googleBtn,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              {googleLoading ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Text style={[styles.googleBtnText, { color: colors.text }]}>Continue with Google</Text>
+              )}
+            </TouchableOpacity>
           </View>
 
           {/* Footer switch to Register */}
@@ -161,9 +238,14 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   logoEmoji: {
     fontSize: 32,
@@ -202,6 +284,33 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: Spacing.sm,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.size.xs,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1.5,
+  },
+  googleBtnText: {
+    fontSize: Typography.size.md,
+    fontWeight: '700',
   },
   footer: {
     flexDirection: 'row',

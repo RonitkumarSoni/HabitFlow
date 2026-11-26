@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { statsApi, DayCompletion } from '../../src/api/stats';
 import { habitsApi, Habit } from '../../src/api/habits';
@@ -180,26 +181,48 @@ export default function StatsScreen() {
             </Text>
           ) : null}
 
-          {habits.map((habit: Habit) => (
-            <View key={habit._id} style={[styles.habitBreakdownRow, { borderBottomColor: colors.border }]}>
-              <View style={[styles.habitIconMini, { backgroundColor: `${habit.color || colors.primary}22` }]}>
-                <Text style={{ fontSize: 16 }}>{habit.currentStreak > 0 ? '🔥' : '🌱'}</Text>
+          {habits.map((habit: Habit) => {
+            const habitColor = habit.color || colors.primary;
+            return (
+              <View key={habit._id} style={[styles.habitBreakdownRow, { borderBottomColor: colors.border }]}>
+                <View style={[styles.habitIconMini, { backgroundColor: `${habitColor}1E` }]}>
+                  <Ionicons
+                    name={(habit.icon as any) || 'checkbox-outline'}
+                    size={20}
+                    color={habitColor}
+                  />
+                </View>
+                <View style={{ flex: 1, marginRight: Spacing.md }}>
+                  <Text style={[styles.habitBreakdownName, { color: colors.text }]} numberOfLines={1}>
+                    {habit.title}
+                  </Text>
+                  <Text style={[styles.habitBreakdownSub, { color: colors.textSecondary }]}>
+                    Longest run: {habit.longestStreak} days
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.streakPill,
+                    {
+                      backgroundColor: habit.currentStreak > 0 ? colors.streakLight : colors.surfaceSubtle,
+                    },
+                  ]}
+                >
+                  <Text style={{ fontSize: 13, marginRight: 3 }}>
+                    {habit.currentStreak > 0 ? '🔥' : '⏳'}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.streakPillVal,
+                      { color: habit.currentStreak > 0 ? colors.streak : colors.textSecondary },
+                    ]}
+                  >
+                    {habit.currentStreak}d
+                  </Text>
+                </View>
               </View>
-              <View style={{ flex: 1, marginRight: Spacing.md }}>
-                <Text style={[styles.habitBreakdownName, { color: colors.text }]} numberOfLines={1}>
-                  {habit.title}
-                </Text>
-                <Text style={[styles.habitBreakdownSub, { color: colors.textSecondary }]}>
-                  Longest run: {habit.longestStreak} days
-                </Text>
-              </View>
-              <View style={[styles.streakPill, { backgroundColor: colors.streakLight }]}>
-                <Text style={[styles.streakPillVal, { color: colors.streak }]}>
-                  {habit.currentStreak}d
-                </Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         <View style={{ height: 60 }} />
